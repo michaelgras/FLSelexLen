@@ -541,7 +541,7 @@ mleg = function(size=0.5,height=0.5,width=0.5,title=6,text=6){
 #' Isopleth plot of Selectivity vs F
 #'
 #' @param brps output from brp.selex() 
-#' @param fit output from () 
+#' @param fit output from fitselex() 
 #' @param Fmax upper possible limit of  F range
 #' @param panels choice of plots 1:4
 #' \itemize{
@@ -560,7 +560,8 @@ mleg = function(size=0.5,height=0.5,width=0.5,title=6,text=6){
 #' }
 #' @return ggplot   
 #' @export
-ploteqselex_2 = function(brps,fit,Fmax=2.,panels=NULL, ncol=NULL,colours=NULL,Ftrg=c("none","msy","f0.1")){
+ploteqselex_2 = function(brps,fit,Fmax=2.,panels=NULL, ncol=NULL,colours=NULL,Ftrg=c("none","msy","f0.1"),
+                         stk_name = NULL){
   # Colour function
   if(is.null(colours)){colf = r4col} else {colf = colours}
   if(is.null(panels)) panels=1:4
@@ -698,6 +699,6 @@ ploteqselex_2 = function(brps,fit,Fmax=2.,panels=NULL, ncol=NULL,colours=NULL,Ft
   }
   plots <- list(P1=P1,P2=P2,P3=P3,P4=P4)
   
-  if(length(panels)>1) return(gridExtra::grid.arrange(grobs =  plots[panels], ncol = ncol))  
+  if(length(panels)>1) return(gridExtra::grid.arrange(grobs =  plots[panels], ncol = ncol, top = stk_name))  
   if(length(panels)==1) return(plots[[panels]])  
 }
