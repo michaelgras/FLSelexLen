@@ -560,7 +560,8 @@ mleg = function(size=0.5,height=0.5,width=0.5,title=6,text=6){
 #' }
 #' @return ggplot   
 #' @export
-ploteqselex_2 = function(brps,fit,Fmax=2.,panels=NULL, ncol=NULL,colours=NULL,Ftrg=c("none","msy","f0.1"),
+ploteqselex_2 = function(brps,fit,Fmax=2.,panels=NULL, 
+                         ncol=NULL,colours=NULL,Ftrg=c("none","msy","f0.1"),
                          stk_name = NULL){
   # Colour function
   if(is.null(colours)){colf = r4col} else {colf = colours}
@@ -569,7 +570,7 @@ ploteqselex_2 = function(brps,fit,Fmax=2.,panels=NULL, ncol=NULL,colours=NULL,Ft
     if(length(panels)%in%c(1,3)){ncol=length(panels)} else {ncol=2}
   }
   # instead of observed we choose the brp that corresponds to fitted s50
-  obsS <- names(brps)[an(names(brps)) >= round(an(fit$par[1]),1)][1]
+  obsS <- names(brps)[an(names(brps)) >= round(an(fit$par[1]),1)][2]
   
   # Check range 
   # WARNING: Also include na.rm = TRUE in order to get the limits (lim) in case the fmle did not converged all the times
