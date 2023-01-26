@@ -586,3 +586,21 @@ selex.fwd = function(sel,stock,sr=NULL,fyears=50,Fref=NULL,nyears=3,plim=0.975,f
 }
 
 
+# {{{
+# invVB 
+#
+#' converts length into age using an inverse von Bertalanffy growth function
+#'
+#' @param L Length of the fish
+#' @param vBPar FLPar 
+#' @return age corresponding to the length
+#' @export
+
+invVB <- function (L, vBPar) 
+{
+  age <- rep(NA, length(L))
+  for (i in 1:length(L)) {
+    age[i] <- max(1, ((-log(1 - L[i]/c(vBPar["Linf"])))/c(vBPar["K"]) + c(vBPar["T0"])))
+  }
+  return(age)
+}

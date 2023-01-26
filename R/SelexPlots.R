@@ -560,7 +560,10 @@ mleg = function(size=0.5,height=0.5,width=0.5,title=6,text=6){
 #' }
 #' @return ggplot   
 #' @export
-ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, vBPar, panels=NULL, ncol=NULL, colours=NULL, Ftrg=c("none","msy","f0.1"), stk_name = NULL){
+ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, len50gear=NULL, 
+                         vBPar, panels=NULL, ncol=NULL, colours=NULL, 
+                         Ftrg=c("none","msy","f0.1"), stk_name = NULL){
+  
   # Colour function
   if(is.null(colours)){colf = r4col} else {colf = colours}
   if(is.null(panels)) panels=1:4
@@ -568,8 +571,18 @@ ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, vBPar, panels=NULL, 
     if(length(panels)%in%c(1,3)){ncol=length(panels)} else {ncol=2}
   }
   # instead of observed we choose the brp that corresponds to fitted s50
-    obsS <- names(brps[-1])[an(names(brps)) >= round(an(fit$par[1]),1)][2]
+  obsS <- names(brps)[an(names(brps)) >= round(an(fit$par[1]),1)][2]
   
+  # add an extra point in the graph of isopleths (by adding an observed L50 of population
+  # in the function)
+  age50gear <- invVB(len50gear, vBPar)
+  
+  obsL50 <- rep(NA, length(len50gear))
+  for (i in 1:length(age50gear))
+  {
+  obsL50[i] <- names(brps)[an(names(brps)) >= round(age50gear[i],1)][2]
+  }
+
   # Check range 
   # WARNING: Also include na.rm = TRUE in order to get the limits (lim) in case the fmle did not converged all the times
   if(paste(brps[[1]]@model)[3]%in%c("a + ssb/ssb - 1")){
@@ -605,6 +618,12 @@ ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, vBPar, panels=NULL, 
   # S50obs = s50(Sa)
   S50obs = an(fit$par[1])
   S50lobs <- vonB(S50obs, vBPar)
+  
+  # Adding an extra point to the graph providing len50gear
+  Flen50gear = an(refpts(brps[[obsL50[1]]])["Fref","harvest"])
+  Ylen50gear = an(refpts(brps[[obsL50[1]]])["Fref","yield"])
+  Slen50gear = an(refpts(brps[[obsL50[1]]])["Fref","ssb"])
+  ## ================================================== ##
   isodat$Fo = c(obs$harvest,rep(NA,nrow(isodat)-nrow(obs)))
   isodat$Yo = c(obs$yield,rep(NA,nrow(isodat)-nrow(obs)))/max(isodat$yield)
   isodat$So = c(obs$ssb,rep(NA,nrow(isodat)-nrow(obs)))/max(isodat$ssb)
@@ -616,124 +635,124 @@ ploteqselex_2 = function(brps, fit, Fmax=2., ageBased=TRUE, vBPar, panels=NULL, 
     },brps[-1],S50))
     ftrg = ftrg[ftrg$ftrg<lim,]
   }
-ftrg$s50l <- vonB(ftrg$s50, vBPar)
-
+  ftrg$s50l <- vonB(ftrg$s50, vBPar)
+  
   # F vs Yield
-if (ageBased) {
-  P1 = ggplot(data=isodat,aes(x=harvest,y=yield/max(yield),group=S50))+
-    geom_line(aes(color=S50))+geom_line(aes(x=Fo,y=Yo),size=0.7,linetype="dashed", na.rm=TRUE)+
-    scale_color_gradientn(colours=rev(colf(20)))+ylab(labs[1])+
-    geom_segment(aes(x = Fobs, xend = Fobs, y = 0, yend = Yobs/max(yield)), colour = "black",size=0.3,linetype="dotted")+
-    geom_segment(aes(x = 0, xend = Fobs, y = Yobs/max(yield), yend = Yobs/max(yield)), colour = "black",size=0.3,linetype="dotted")+
-    geom_point(aes(x=Fobs,y=Yobs/max(yield)),size=2)+
-    xlab("Fishing Mortality")+
-    theme(legend.key.size = unit(1, 'cm'), #change legend key size
-          legend.key.height = unit(1, 'cm'),
-          legend.text = element_text(size=7),
-          legend.key.width = unit(0.6, 'cm'),
-          axis.title=element_text(size=10),
-          legend.title=element_text(size=9)
-    )+
-    scale_x_continuous(expand = c(0, 0)) + 
-    scale_y_continuous(expand = c(0, 0),limits=c(0,1))
-} else {
-  P1 = ggplot(data=isodat,aes(x=harvest,y=yield/max(yield),group=S50l))+
-    geom_line(aes(color=S50l))+geom_line(aes(x=Fo,y=Yo),size=0.7,linetype="dashed", na.rm=TRUE)+
-    scale_color_gradientn(colours=rev(colf(20)))+ylab(labs[1])+
-    geom_segment(aes(x = Fobs, xend = Fobs, y = 0, yend = Yobs/max(yield)), colour = "black",size=0.3,linetype="dotted")+
-    geom_segment(aes(x = 0, xend = Fobs, y = Yobs/max(yield), yend = Yobs/max(yield)), colour = "black",size=0.3,linetype="dotted")+
-    geom_point(aes(x=Fobs,y=Yobs/max(yield)),size=2)+
-    xlab("Fishing Mortality")+
-    theme(legend.key.size = unit(1, 'cm'), #change legend key size
-          legend.key.height = unit(1, 'cm'),
-          legend.text = element_text(size=7),
-          legend.key.width = unit(0.6, 'cm'),
-          axis.title=element_text(size=10),
-          legend.title=element_text(size=9)
-    )+
-    scale_x_continuous(expand = c(0, 0)) + 
-    scale_y_continuous(expand = c(0, 0),limits=c(0,1))  
-}
-
+  if (ageBased) {
+    P1 = ggplot(data=isodat,aes(x=harvest,y=yield/max(yield),group=S50))+
+      geom_line(aes(color=S50))+geom_line(aes(x=Fo,y=Yo),size=0.7,linetype="dashed", na.rm=TRUE)+
+      scale_color_gradientn(colours=rev(colf(20)))+ylab(labs[1])+
+      geom_segment(aes(x = Fobs, xend = Fobs, y = 0, yend = Yobs/max(yield)), colour = "black",size=0.3,linetype="dotted")+
+      geom_segment(aes(x = 0, xend = Fobs, y = Yobs/max(yield), yend = Yobs/max(yield)), colour = "black",size=0.3,linetype="dotted")+
+      geom_point(aes(x=Fobs,y=Yobs/max(yield)),size=2)+
+      xlab("Fishing Mortality")+
+      theme(legend.key.size = unit(1, 'cm'), #change legend key size
+            legend.key.height = unit(1, 'cm'),
+            legend.text = element_text(size=7),
+            legend.key.width = unit(0.6, 'cm'),
+            axis.title=element_text(size=10),
+            legend.title=element_text(size=9)
+      )+
+      scale_x_continuous(expand = c(0, 0)) + 
+      scale_y_continuous(expand = c(0, 0),limits=c(0,1))
+  } else {
+    P1 = ggplot(data=isodat,aes(x=harvest,y=yield/max(yield),group=S50l))+
+      geom_line(aes(color=S50l))+geom_line(aes(x=Fo,y=Yo),size=0.7,linetype="dashed", na.rm=TRUE)+
+      scale_color_gradientn(colours=rev(colf(20)))+ylab(labs[1])+
+      geom_segment(aes(x = Fobs, xend = Fobs, y = 0, yend = Yobs/max(yield)), colour = "black",size=0.3,linetype="dotted")+
+      geom_segment(aes(x = 0, xend = Fobs, y = Yobs/max(yield), yend = Yobs/max(yield)), colour = "black",size=0.3,linetype="dotted")+
+      geom_point(aes(x=Fobs,y=Yobs/max(yield)),size=2)+
+      xlab("Fishing Mortality")+
+      theme(legend.key.size = unit(1, 'cm'), #change legend key size
+            legend.key.height = unit(1, 'cm'),
+            legend.text = element_text(size=7),
+            legend.key.width = unit(0.6, 'cm'),
+            axis.title=element_text(size=10),
+            legend.title=element_text(size=9)
+      )+
+      scale_x_continuous(expand = c(0, 0)) + 
+      scale_y_continuous(expand = c(0, 0),limits=c(0,1))  
+  }
+  
   # F vs SSB  
-if (ageBased) {
- P2 = ggplot(data=isodat,aes(x=harvest,y=ssb/max(ssb),group=S50))+
-    geom_line(aes(color=S50))+geom_line(aes(x=Fo,y=So),size=0.7,linetype="dashed", na.rm=TRUE)+
-    scale_color_gradientn(colours=rev(colf(20)))+
-    geom_segment(aes(x = Fobs, xend = Fobs, y = 0, yend = Sobs/max(ssb)), colour = "black",size=0.3,linetype="dotted")+
-    geom_segment(aes(x = 0, xend = Fobs, y = Sobs/max(ssb), yend = Sobs/max(ssb)), colour = "black",size=0.3,linetype="dotted")+
-    geom_point(aes(x=Fobs,y=Sobs/max(ssb)),size=2)+
-    ylab(labs[2])+xlab("Fishing Mortality")+
-    theme(legend.key.size = unit(1, 'cm'), #change legend key size
-          legend.key.height = unit(1, 'cm'),
-          legend.key.width = unit(0.6, 'cm'),
-          legend.text = element_text(size=7),
-          axis.title=element_text(size=10),
-          legend.title=element_text(size=9)
-    )+ 
-    scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0),limits=c(0,1))
-} else{
-  P2 = ggplot(data=isodat,aes(x=harvest,y=ssb/max(ssb),group=S50l))+
-    geom_line(aes(color=S50l))+geom_line(aes(x=Fo,y=So),size=0.7,linetype="dashed", na.rm=TRUE)+
-    scale_color_gradientn(colours=rev(colf(20)))+
-    geom_segment(aes(x = Fobs, xend = Fobs, y = 0, yend = Sobs/max(ssb)), colour = "black",size=0.3,linetype="dotted")+
-    geom_segment(aes(x = 0, xend = Fobs, y = Sobs/max(ssb), yend = Sobs/max(ssb)), colour = "black",size=0.3,linetype="dotted")+
-    geom_point(aes(x=Fobs,y=Sobs/max(ssb)),size=2)+
-    ylab(labs[2])+xlab("Fishing Mortality")+
-    theme(legend.key.size = unit(1, 'cm'), #change legend key size
-          legend.key.height = unit(1, 'cm'),
-          legend.key.width = unit(0.6, 'cm'),
-          legend.text = element_text(size=7),
-          axis.title=element_text(size=10),
-          legend.title=element_text(size=9)
-    )+ 
-    scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0),limits=c(0,1))
-}  
+  if (ageBased) {
+    P2 = ggplot(data=isodat,aes(x=harvest,y=ssb/max(ssb),group=S50))+
+      geom_line(aes(color=S50))+geom_line(aes(x=Fo,y=So),size=0.7,linetype="dashed", na.rm=TRUE)+
+      scale_color_gradientn(colours=rev(colf(20)))+
+      geom_segment(aes(x = Fobs, xend = Fobs, y = 0, yend = Sobs/max(ssb)), colour = "black",size=0.3,linetype="dotted")+
+      geom_segment(aes(x = 0, xend = Fobs, y = Sobs/max(ssb), yend = Sobs/max(ssb)), colour = "black",size=0.3,linetype="dotted")+
+      geom_point(aes(x=Fobs,y=Sobs/max(ssb)),size=2)+
+      ylab(labs[2])+xlab("Fishing Mortality")+
+      theme(legend.key.size = unit(1, 'cm'), #change legend key size
+            legend.key.height = unit(1, 'cm'),
+            legend.key.width = unit(0.6, 'cm'),
+            legend.text = element_text(size=7),
+            axis.title=element_text(size=10),
+            legend.title=element_text(size=9)
+      )+ 
+      scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0),limits=c(0,1))
+  } else{
+    P2 = ggplot(data=isodat,aes(x=harvest,y=ssb/max(ssb),group=S50l))+
+      geom_line(aes(color=S50l))+geom_line(aes(x=Fo,y=So),size=0.7,linetype="dashed", na.rm=TRUE)+
+      scale_color_gradientn(colours=rev(colf(20)))+
+      geom_segment(aes(x = Fobs, xend = Fobs, y = 0, yend = Sobs/max(ssb)), colour = "black",size=0.3,linetype="dotted")+
+      geom_segment(aes(x = 0, xend = Fobs, y = Sobs/max(ssb), yend = Sobs/max(ssb)), colour = "black",size=0.3,linetype="dotted")+
+      geom_point(aes(x=Fobs,y=Sobs/max(ssb)),size=2)+
+      ylab(labs[2])+xlab("Fishing Mortality")+
+      theme(legend.key.size = unit(1, 'cm'), #change legend key size
+            legend.key.height = unit(1, 'cm'),
+            legend.key.width = unit(0.6, 'cm'),
+            legend.text = element_text(size=7),
+            axis.title=element_text(size=10),
+            legend.title=element_text(size=9)
+      )+ 
+      scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0),limits=c(0,1))
+  }  
   # Isopleth plot Yield
   colbr = c(seq(0,0.6,0.2),seq(0.7,0.9,0.1),0.95,1)
   conbr = c(0,0.2,0.4,seq(0.5,0.9,0.1),0.95,1)
   nbr = length(colbr)
   
-if (ageBased) { 
-  P3=ggplot(isodat, aes(x=harvest,y=S50))+
-    geom_raster(aes(fill = yield/max(yield)), 
-                interpolate = T, hjust = 0.5, vjust = 0.5)+ 
-    metR::geom_contour2(aes(z=yield/max(yield)),color = grey(0.4,1),breaks =conbr )+ 
-    metR::geom_text_contour(aes(z=yield/max(yield)),stroke = 0.2,size=3,skip=0,breaks = conbr)+
-    scale_fill_gradientn(colours=rev(colf(nbr+3))[-c(10:11,13)],limits=c(-0.03,1), breaks=colbr, name=paste(quants[1]))+
-    geom_point(aes(x=Fobs,y=S50obs),size=2.5)+
-    geom_segment(aes(x = Fobs, xend = Fobs, y = min(S50), yend = S50obs), colour = "black",size=0.3,linetype="dotted")+
-    geom_segment(aes(x = 0, xend = Fobs, y = S50obs, yend = S50obs), colour = "black",size=0.3,linetype="dotted")+
-    theme(legend.key.size = unit(1, 'cm'), #change legend key size
-          legend.key.height = unit(1, 'cm'),
-          legend.key.width = unit(0.6, 'cm'),
-          legend.text = element_text(size=7),
-          axis.title=element_text(size=10),
-          legend.title=element_text(size=9)
-    )+
-    scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(-0.03, 0))+
-    ylab("Age-at-50%-Selectivity")+xlab("Fishing Mortality")
-    } else
-    {
-        P3=ggplot(isodat, aes(x=harvest,y=S50l))+
-    geom_raster(aes(fill = yield/max(yield)), 
-                interpolate = T, hjust = 0.5, vjust = 0.5)+ 
-    metR::geom_contour2(aes(z=yield/max(yield)),color = grey(0.4,1),breaks =conbr )+ 
-    metR::geom_text_contour(aes(z=yield/max(yield)),stroke = 0.2,size=3,skip=0,breaks = conbr)+
-    scale_fill_gradientn(colours=rev(colf(nbr+3))[-c(10:11,13)],limits=c(-0.03,1), breaks=colbr, name=paste(quants[1]))+
-    geom_point(aes(x=Fobs,y=S50lobs),size=2.5)+
-    geom_segment(aes(x = Fobs, xend = Fobs, y = min(S50l), yend = S50lobs), colour = "black",size=0.3,linetype="dotted")+
-    geom_segment(aes(x = 0, xend = Fobs, y = S50lobs, yend = S50lobs), colour = "black",size=0.3,linetype="dotted")+
-    theme(legend.key.size = unit(1, 'cm'), #change legend key size
-          legend.key.height = unit(1, 'cm'),
-          legend.key.width = unit(0.6, 'cm'),
-          legend.text = element_text(size=7),
-          axis.title=element_text(size=10),
-          legend.title=element_text(size=9)
-    )+
-    scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(-0.03, 0))+
-    ylab("Length-at-50%-Selectivity")+xlab("Fishing Mortality")
-    }
+  if (ageBased) { 
+    P3=ggplot(isodat, aes(x=harvest,y=S50))+
+      geom_raster(aes(fill = yield/max(yield)), 
+                  interpolate = T, hjust = 0.5, vjust = 0.5)+ 
+      metR::geom_contour2(aes(z=yield/max(yield)),color = grey(0.4,1),breaks =conbr )+ 
+      metR::geom_text_contour(aes(z=yield/max(yield)),stroke = 0.2,size=3,skip=0,breaks = conbr)+
+      scale_fill_gradientn(colours=rev(colf(nbr+3))[-c(10:11,13)],limits=c(-0.03,1), breaks=colbr, name=paste(quants[1]))+
+      geom_point(aes(x=Fobs,y=S50obs),size=2.5)+
+      geom_segment(aes(x = Fobs, xend = Fobs, y = min(S50), yend = S50obs), colour = "black",size=0.3,linetype="dotted")+
+      geom_segment(aes(x = 0, xend = Fobs, y = S50obs, yend = S50obs), colour = "black",size=0.3,linetype="dotted")+
+      theme(legend.key.size = unit(1, 'cm'), #change legend key size
+            legend.key.height = unit(1, 'cm'),
+            legend.key.width = unit(0.6, 'cm'),
+            legend.text = element_text(size=7),
+            axis.title=element_text(size=10),
+            legend.title=element_text(size=9)
+      )+
+      scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(-0.03, 0))+
+      ylab("Age-at-50%-Selectivity")+xlab("Fishing Mortality")
+  } else
+  {
+    P3=ggplot(isodat, aes(x=harvest,y=S50l))+
+      geom_raster(aes(fill = yield/max(yield)), 
+                  interpolate = T, hjust = 0.5, vjust = 0.5)+ 
+      metR::geom_contour2(aes(z=yield/max(yield)),color = grey(0.4,1),breaks =conbr )+ 
+      metR::geom_text_contour(aes(z=yield/max(yield)),stroke = 0.2,size=3,skip=0,breaks = conbr)+
+      scale_fill_gradientn(colours=rev(colf(nbr+3))[-c(10:11,13)],limits=c(-0.03,1), breaks=colbr, name=paste(quants[1]))+
+      geom_point(aes(x=Fobs,y=S50lobs),size=2.5)+
+      geom_segment(aes(x = Fobs, xend = Fobs, y = min(S50l), yend = S50lobs), colour = "black",size=0.3,linetype="dotted")+
+      geom_segment(aes(x = 0, xend = Fobs, y = S50lobs, yend = S50lobs), colour = "black",size=0.3,linetype="dotted")+
+      theme(legend.key.size = unit(1, 'cm'), #change legend key size
+            legend.key.height = unit(1, 'cm'),
+            legend.key.width = unit(0.6, 'cm'),
+            legend.text = element_text(size=7),
+            axis.title=element_text(size=10),
+            legend.title=element_text(size=9)
+      )+
+      scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(-0.03, 0))+
+      ylab("Length-at-50%-Selectivity")+xlab("Fishing Mortality")
+  }
   
   # Isopleth SSB
   colbr = c(0.05,seq(0,1,0.1))
@@ -741,56 +760,63 @@ if (ageBased) {
   nbr = length(colbr)
   if (ageBased) {
     P4 = ggplot(isodat, aes(x=harvest,y=S50))+
-    geom_raster(aes(fill = ssb/max(ssb)), 
-                interpolate = T, hjust = 0.5, vjust = 0.5)+ 
-    metR::geom_contour2(aes(z=ssb/max(ssb)),color = grey(0.4,1),breaks =conbr )+
-    metR::geom_text_contour(aes(z=ssb/max(ssb)),stroke = 0.2,size=3,skip=0,breaks = conbr)+
-    scale_fill_gradientn(colours=rev(colf(nbr+4))[-c(4:7)],limits=c(-0.03,1), breaks=colbr, name=quants[2])+
-    theme(legend.key.size = unit(1, 'cm'), #change legend key size
-          legend.key.height = unit(1, 'cm'),
-          legend.key.width = unit(0.6, 'cm'),
-          legend.text = element_text(size=7),
-          axis.title=element_text(size=10),
-          legend.title=element_text(size=9)
-    )+
-    geom_point(aes(x=Fobs,y=S50obs),size=2.5)+
-    geom_segment(aes(x = Fobs, xend = Fobs, y = min(S50), yend = S50obs), colour = "black",size=0.3,linetype="dotted")+
-    geom_segment(aes(x = 0, xend = Fobs, y = S50obs, yend = S50obs), colour = "black",size=0.3,linetype="dotted")+
-    scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(-0.03, 0))+
-    ylab("Age-at-50%-Selectivity")+xlab("Fishing Mortality")
-} else {
-  P4 = ggplot(isodat, aes(x=harvest,y=S50l))+
-    geom_raster(aes(fill = ssb/max(ssb)), 
-                interpolate = T, hjust = 0.5, vjust = 0.5)+ 
-    metR::geom_contour2(aes(z=ssb/max(ssb)),color = grey(0.4,1),breaks =conbr )+
-    metR::geom_text_contour(aes(z=ssb/max(ssb)),stroke = 0.2,size=3,skip=0,breaks = conbr)+
-    scale_fill_gradientn(colours=rev(colf(nbr+4))[-c(4:7)],limits=c(-0.03,1), breaks=colbr, name=quants[2])+
-    theme(legend.key.size = unit(1, 'cm'), #change legend key size
-          legend.key.height = unit(1, 'cm'),
-          legend.key.width = unit(0.6, 'cm'),
-          legend.text = element_text(size=7),
-          axis.title=element_text(size=10),
-          legend.title=element_text(size=9)
-    )+
-    geom_point(aes(x=Fobs,y=S50lobs),size=2.5)+
-    geom_segment(aes(x = Fobs, xend = Fobs, y = min(S50l), yend = S50lobs), colour = "black",size=0.3,linetype="dotted")+
-    geom_segment(aes(x = 0, xend = Fobs, y = S50lobs, yend = S50lobs), colour = "black",size=0.3,linetype="dotted")+
-    scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(-0.03, 0))+
-    ylab("Length-at-50%-Selectivity")+xlab("Fishing Mortality")
-}
-
-
+      geom_raster(aes(fill = ssb/max(ssb)), 
+                  interpolate = T, hjust = 0.5, vjust = 0.5)+ 
+      metR::geom_contour2(aes(z=ssb/max(ssb)),color = grey(0.4,1),breaks =conbr )+
+      metR::geom_text_contour(aes(z=ssb/max(ssb)),stroke = 0.2,size=3,skip=0,breaks = conbr)+
+      scale_fill_gradientn(colours=rev(colf(nbr+4))[-c(4:7)],limits=c(-0.03,1), breaks=colbr, name=quants[2])+
+      theme(legend.key.size = unit(1, 'cm'), #change legend key size
+            legend.key.height = unit(1, 'cm'),
+            legend.key.width = unit(0.6, 'cm'),
+            legend.text = element_text(size=7),
+            axis.title=element_text(size=10),
+            legend.title=element_text(size=9)
+      )+
+      geom_point(aes(x=Fobs,y=S50obs),size=2.5)+
+      geom_segment(aes(x = Fobs, xend = Fobs, y = min(S50), yend = S50obs), colour = "black",size=0.3,linetype="dotted")+
+      geom_segment(aes(x = 0, xend = Fobs, y = S50obs, yend = S50obs), colour = "black",size=0.3,linetype="dotted")+
+      scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(-0.03, 0))+
+      ylab("Age-at-50%-Selectivity")+xlab("Fishing Mortality")
+  } else {
+    P4 = ggplot(isodat, aes(x=harvest,y=S50l))+
+      geom_raster(aes(fill = ssb/max(ssb)), 
+                  interpolate = T, hjust = 0.5, vjust = 0.5)+ 
+      metR::geom_contour2(aes(z=ssb/max(ssb)),color = grey(0.4,1),breaks =conbr )+
+      metR::geom_text_contour(aes(z=ssb/max(ssb)),stroke = 0.2,size=3,skip=0,breaks = conbr)+
+      scale_fill_gradientn(colours=rev(colf(nbr+4))[-c(4:7)],limits=c(-0.03,1), breaks=colbr, name=quants[2])+
+      theme(legend.key.size = unit(1, 'cm'), #change legend key size
+            legend.key.height = unit(1, 'cm'),
+            legend.key.width = unit(0.6, 'cm'),
+            legend.text = element_text(size=7),
+            axis.title=element_text(size=10),
+            legend.title=element_text(size=9)
+      )+
+      geom_point(aes(x=Fobs,y=S50lobs),size=2.5)+
+      geom_segment(aes(x = Fobs, xend = Fobs, y = min(S50l), yend = S50lobs), colour = "black",size=0.3,linetype="dotted")+
+      geom_segment(aes(x = 0, xend = Fobs, y = S50lobs, yend = S50lobs), colour = "black",size=0.3,linetype="dotted")+
+      scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(-0.03, 0))+
+      ylab("Length-at-50%-Selectivity")+xlab("Fishing Mortality")
+  }
+  
+  
   if(Ftrg[1]!="none"){
     if (ageBased) {
       P3 = P3+geom_point(data=ftrg,aes(x=ftrg,y=s50),shape = 21, colour = "black",size=1.1, fill = "white")
-      } else {
+    } else {
       P3 = P3+geom_point(data=ftrg,aes(x=ftrg,y=s50l),shape = 21, colour = "black",size=1.1, fill = "white")
-      }
+    }
     if (ageBased) {
       P4= P4+geom_point(data=ftrg,aes(x=ftrg,y=s50),shape = 21, colour = "black",size=1.1, fill = "white")
     } else {
       P4= P4+geom_point(data=ftrg,aes(x=ftrg,y=s50l),shape = 21, colour = "black",size=1.1, fill = "white")
     }
+  }
+  
+  ## Adding the extra point to the graph
+  if(!is.null(len50gear)){
+    
+    P3 = P3 + geom_point(data = data.frame(x=rep(Flen50gear, length(len50gear)), y=len50gear), aes(x = x, y = y), shape = 23, fill="white", size = 2)
+    P4 = P4 + geom_point(data = data.frame(x=rep(Flen50gear, length(len50gear)), y=len50gear), aes(x = x, y = y), shape = 23, fill="white", size = 2)
   }
   plots <- list(P1=P1,P2=P2,P3=P3,P4=P4)
   
