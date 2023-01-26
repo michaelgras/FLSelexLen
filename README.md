@@ -2,11 +2,11 @@
 *Analyzing impacts of alternative selectivity patterns in FLR* 
 
 
-### Author: Henning Winker (EC-JRC) 
+### Author: Michael Gras & Henning Winker (EC-JRC) 
 
 # Installation
 
-`FLSelex` requires very recent versions of `FLR` libraries `FLCore`, `FLBRP`, `FLasher` and `ggplotFL`. This can be installed together with `FLSelex` from gihtub using library(devtools):
+`FLSelexLen` requires very recent versions of `FLR` libraries `FLCore`, `FLBRP`, `FLasher`, `ggplotFL`, `FLife`. This can be installed together with `FLSelexLen` from gihtub using library(devtools):
 
 ```{r, eval=FALSE}
 installed.packages("devtools")
@@ -19,7 +19,7 @@ devtools::install_github("flr/FLasher")
 
 devtools::install_github("flr/ggplotFL")
 
-devtools::install_github("henning-winker/FLSelex")
+devtools::install_github("michaelgras/FLSelexLen")
 
 ```
 However, due to increasing difficulties of compiling C++ code with Rtools for Windows systems, these are also provided a binary package zip files [here](https://github.com/Henning-Winker/FLSelex/tree/main/binary_package/win). Not a dependency, but a very useful to explore selectivity pattern under alternative stock recruitment relationships is the new [`FLSRTMBbeta`](https://github.com/Henning-Winker/FLSRTMBbeta/blob/main/README.md) (Winker and Mosqueira, 2021), for which the latest binary package zip for Windows can be found [here](https://github.com/Henning-Winker/FLSRTMBbeta/tree/main/BinaryPackage/win). 

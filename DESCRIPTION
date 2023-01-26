@@ -1,25 +1,31 @@
 Package: FLSelexLen
-Title: Selectivity analysis in FLR
-Version: 1.0.8
+Title: Selectivity analysis in FLR with option to run either in age or length
+Version: 1.0.0
 Authors@R: 
-    c(person(given = "Henning",
+    c(person(given = "Michael",
+           family = "Gras",
+           role = c("aut"),
+           email = "henning.winker@gmail.com"),
+           person(given = "Henning",
            family = "Winker",
-           role = c("aut", "cre"),
-           email = "henning.winker@ec.europa.com"))
-Maintainer: Henning Winker <Henning.Winker@gmail.com>
-Description: Blah
+           role = c("cre"),
+           email = "henning.winker@gmail.com"))
+Maintainer: Michael Gras <michael.gras@ymail.com>
+Description: Package derived from FLSelex developed by Henning Winker
 Depends:
     R (>= 3.5),
     ggplot2,
     FLCore,
     ggplotFL,
     FLBRP,
-    FLasher
+    FLasher,
+    FLife
 Imports:
   methods,
   ggplot2,
   gridExtra,
-  metR
+  metR,
+  FLife
 License: EUPL
 Encoding: UTF-8
 LazyData: true
