@@ -261,7 +261,7 @@ fitselexlen <- function(Sl,S50=NULL,S95=NULL,Smax=NULL,Dcv=NULL,Dmin=NULL,CVlim=
 #' @author Michael Gras & Henning Winker
 lopt<-function(stock, nyears=3){
   object=stock
-  len <- as.numeric(dimnames(stkL)$len) # dims(object)[["min"]]:dims(object)[["max"]]
+  len <- as.numeric(dimnames(object)$len) # dims(object)[["min"]]:dims(object)[["max"]]
   survivors <- exp(-apply(m(object),2,cumsum))
   survivors[-1] <- survivors[-dim(survivors)[1]]
   survivors[1] <- 1
